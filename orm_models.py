@@ -1,21 +1,23 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.sql import func
+from config import engine
 
 # Создаем базовый класс для моделей
 Base = declarative_base()
+
 
 # Модель для таблицы managers
 class Manager(Base):
     __tablename__ = 'managers'
     manager_id = Column(Integer, primary_key=True)
-    login = Column(String(100))
+    login = Column(String(100), unique=True)
     hashed_password = Column(String(100))
     phone = Column(String(100))
     full_name = Column(String(100))
-    email = Column(String(100))
+    email = Column(String(100), unique=True)
     areas = relationship("Area", back_populates="manager")
+
 
 # Модель для таблицы areas
 class Area(Base):
@@ -25,6 +27,7 @@ class Area(Base):
     manager_id = Column(Integer, ForeignKey('managers.manager_id'))
     manager = relationship("Manager", back_populates="areas")
     buildings = relationship("Building", back_populates="area")
+
 
 # Модель для таблицы buildings
 class Building(Base):
@@ -39,6 +42,7 @@ class Building(Base):
     heating = relationship("Heating", back_populates="building")
     electrical = relationship("Electrical", back_populates="building")
 
+
 # Модель для таблицы entrances
 class Entrance(Base):
     __tablename__ = 'entrances'
@@ -48,6 +52,7 @@ class Entrance(Base):
     electrical_panel_info = Column(String(10))
     building = relationship("Building", back_populates="entrances_rel")
     apartments = relationship("Apartment", back_populates="entrance")
+
 
 # Модель для таблицы apartments
 class Apartment(Base):
@@ -62,6 +67,7 @@ class Apartment(Base):
     residents = relationship("Resident", back_populates="apartment")
     requests = relationship("Request", back_populates="apartment")
 
+
 # Модель для таблицы residents
 class Resident(Base):
     __tablename__ = 'residents'
@@ -73,6 +79,7 @@ class Resident(Base):
     apartment = relationship("Apartment", back_populates="residents")
     requests = relationship("Request", back_populates="resident")
 
+
 # Модель для таблицы plumbing
 class Plumbing(Base):
     __tablename__ = 'plumbing'
@@ -82,6 +89,7 @@ class Plumbing(Base):
     riser_number = Column(Integer)
     passes_through_flats = Column(Text)
     building = relationship("Building", back_populates="plumbing")
+
 
 # Модель для таблицы heating
 class Heating(Base):
@@ -93,6 +101,7 @@ class Heating(Base):
     passes_through_flats = Column(Text)
     building = relationship("Building", back_populates="heating")
 
+
 # Модель для таблицы electrical
 class Electrical(Base):
     __tablename__ = 'electrical'
@@ -102,6 +111,7 @@ class Electrical(Base):
     distribution_panel = Column(Text)
     building = relationship("Building", back_populates="electrical")
 
+
 # Модель для таблицы requests
 class Request(Base):
     __tablename__ = 'requests'
@@ -110,12 +120,20 @@ class Request(Base):
     apartment_id = Column(Integer, ForeignKey('apartments.apartment_id'))
     type = Column(String(100))
     description = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    is_in_process = Column(Boolean, default=False)
-    is_done = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    status_id = Column(Integer, ForeignKey('statuses.status_id'))
     resident = relationship("Resident", back_populates="requests")
     apartment = relationship("Apartment", back_populates="requests")
     assignments = relationship("Assignment", back_populates="request")
+    status = relationship("Status", back_populates="requests")  # Связь с таблицей statuses
+
+
+class Status(Base):
+    __tablename__ = 'statuses'
+    status_id = Column(Integer, primary_key=True)
+    status_name = Column(String(100))
+    requests = relationship("Request", back_populates="status")  # Обратная связь
+
 
 # Модель для таблицы workers
 class Worker(Base):
@@ -125,6 +143,7 @@ class Worker(Base):
     specialization = Column(String(50))
     phone = Column(String(20))
     assignments = relationship("Assignment", back_populates="worker")
+
 
 # Модель для таблицы assignments
 class Assignment(Base):
@@ -138,6 +157,7 @@ class Assignment(Base):
     worker = relationship("Worker", back_populates="assignments")
     materials = relationship("Material", back_populates="assignment")
 
+
 # Модель для таблицы materials
 class Material(Base):
     __tablename__ = 'materials'
@@ -147,8 +167,8 @@ class Material(Base):
     quantity = Column(Integer)
     assignment = relationship("Assignment", back_populates="materials")
 
+
 # Создаем базу данных и таблицы
 if __name__ == "__main__":
-    engine = create_engine('postgresql+psycopg2://user:1111@localhost:5432/management')
     # Создаем все таблицы
-    # Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
