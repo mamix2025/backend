@@ -1,4 +1,6 @@
 # API
+## Установка зависимостей
+`pip install -r requirements.txt`
 ## Последовательность действий
 1. Создаёшь в Postgres БД managers
 2. Делаешь пароль 1111
