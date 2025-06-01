@@ -4,10 +4,16 @@
 ## Последовательность действий
 1. Создаёшь в Postgres БД management
 2. Делаешь пароль 1111
-3. Запускаешь orm_models.py
-4. Запускаешь data_filling.py (Для заполнения какими то данными (Все претензии к GPT))
-5. Запускаешь сервер
-6. Тестишь запросы через Postman
+3. Вводишь нужные SQL команды в pgAdmin
+4. Запускаешь orm_models.py
+5. Запускаешь data_filling.py (Для заполнения какими то данными (Все претензии к GPT))
+6. Запускаешь сервер
+7. Тестишь запросы через Postman
+
+## Нужные SQL команды
+`CREATE USER "user" WITH PASSWORD '1111';`  
+`GRANT ALL PRIVILEGES ON DATABASE management TO "user";`  
+`GRANT USAGE, CREATE ON SCHEMA public TO "user";`
 ## Запуск сервера
 **Из директории с api.py:**  
 `uvicorn api:app --reload`
