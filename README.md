@@ -2,7 +2,7 @@
 ## Установка зависимостей
 `pip install -r requirements.txt`
 ## Последовательность действий
-1. Создаёшь в Postgres БД managers
+1. Создаёшь в Postgres БД management
 2. Делаешь пароль 1111
 3. Запускаешь orm_models.py
 4. Запускаешь data_filling.py (Для заполнения какими то данными (Все претензии к GPT))
