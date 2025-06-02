@@ -96,6 +96,13 @@ class RequestsCreateOut(BaseModel):
     success: bool
     request_id: Optional[int] = None
 
+class ChangeStatusIn(BaseModel):
+    request_id: int
+    status_id: int
+
+class ChangeStatusOut(BaseModel):
+    success: bool
+
 
 @app.post("/api/register", response_model=RegisterOut, description="Register a new manager with hashed password")
 def register_user(user: RegisterIn, db: Session = Depends(get_db)):
@@ -241,3 +248,27 @@ def login_manager(request: LoginIn, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": str(manager.manager_id)})
 
     return {"success": True, "token": access_token}
+
+
+@app.post("/api/requests/change_status", response_model=ChangeStatusOut)
+def change_status(request: ChangeStatusIn, db: Session = Depends(get_db), manager_id: int = Depends(get_current_user)):
+    # Находим запрос по request_id
+    req = db.query(Request).filter_by(request_id=request.request_id).first()
+
+    # Проверяем, существует ли запрос
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    # Обновляем status_id
+    req.status_id = request.status_id
+
+    try:
+        # Сохраняем изменения в базе данных
+        db.commit()
+        print(f"Status_id для request_id={request.request_id} обновлён на {req.status_id}")
+        return {"success": True}
+    except Exception as e:
+        # Откатываем изменения в случае ошибки
+        db.rollback()
+        print(f"Ошибка при обновлении: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update status")
