@@ -15,8 +15,20 @@ import jwt
 from jwt import ExpiredSignatureError, PyJWTError
 import bcrypt
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI()
 SessionLocal = sessionmaker(bind=engine)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"],  
+)
 
 # JWT настройки
 SECRET_KEY = "bayden"  # Замените на безопасный ключ
