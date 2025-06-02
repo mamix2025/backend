@@ -103,6 +103,14 @@ class ChangeStatusIn(BaseModel):
 class ChangeStatusOut(BaseModel):
     success: bool
 
+# Pydantic-схема для входных данных
+class DeleteRequestIn(BaseModel):
+    request_id: int
+
+# Pydantic-схема для выходных данных
+class DeleteRequestOut(BaseModel):
+    success: bool
+    message: str
 
 @app.post("/api/register", response_model=RegisterOut, description="Register a new manager with hashed password")
 def register_user(user: RegisterIn, db: Session = Depends(get_db)):
@@ -272,3 +280,27 @@ def change_status(request: ChangeStatusIn, db: Session = Depends(get_db), manage
         db.rollback()
         print(f"Ошибка при обновлении: {e}")
         raise HTTPException(status_code=500, detail="Failed to update status")
+
+
+
+# Эндпоинт для удаления запроса
+@app.post("/api/requests/delete", response_model=DeleteRequestOut)
+def delete_request(request: DeleteRequestIn, db: Session = Depends(get_db), manager_id: int = Depends(get_current_user)):
+    # Находим запрос по request_id
+    req = db.query(Request).filter_by(request_id=request.request_id).first()
+
+    # Проверяем, существует ли запрос
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    try:
+        # Удаляем запрос
+        db.delete(req)
+        db.commit()
+        print(f"Request with request_id={request.request_id} deleted successfully")
+        return {"success": True, "message": f"Request {request.request_id} deleted successfully"}
+    except Exception as e:
+        # Откатываем изменения в случае ошибки
+        db.rollback()
+        print(f"Error during deletion: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete request: {str(e)}")
